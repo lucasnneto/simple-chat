@@ -18,10 +18,29 @@ const TYPES = Object.freeze({
 app.get("/", (req, res) => res.send(new Date()));
 
 const wss = new WebSocketServer({ server });
+function sendToAll(msg, list = []) {
+  wss.clients.forEach((ws) => {
+    if (list.length) {
+      if (list.includes(ws.name)) ws.send(msg);
+    } else {
+      ws.send(msg);
+    }
+  });
+}
+function sendToAllChats(list = []) {
+  wss.clients.forEach(async (ws) => {
+    const res = await chats.getAllChat(ws.name);
+    if (list.length) {
+      if (list.includes(ws.name)) ws.send(JSON.stringify(res));
+    } else {
+      ws.send(JSON.stringify(res));
+    }
+  });
+}
 wss.on("connection", function connection(ws) {
-  ws.send(JSON.stringify({ msg: "Conectado!" }));
+  ws.send(JSON.stringify({ status: "Conectado" }));
   ws.on("close", () => {
-    console.log("teste");
+    console.log("closed", ws.name);
   });
   ws.on("message", async function message(rawData) {
     const data = JSON.parse(rawData.toString());
@@ -34,7 +53,9 @@ wss.on("connection", function connection(ws) {
           return ws.send(JSON.stringify({ msg: "Esse usuario ja existe" }));
         }
         ws.name = data.name;
-        ws.send(JSON.stringify({ msg: "Usuario criado com sucesso" }));
+        ws.send(JSON.stringify({ type: "USER_CREATED", name: ws.name }));
+        const resListAll3 = await chats.getAllChat(ws.name);
+        ws.send(JSON.stringify(resListAll3));
         break;
 
       case TYPES.LIST:
@@ -50,7 +71,7 @@ wss.on("connection", function connection(ws) {
         break;
 
       case TYPES.LIST_ALL:
-        const resListAll = await chats.getAllChat();
+        const resListAll = await chats.getAllChat(ws.name);
         ws.send(JSON.stringify(resListAll));
         break;
 
@@ -60,10 +81,10 @@ wss.on("connection", function connection(ws) {
             JSON.stringify("É necessario criar um usuario primeiro")
           );
         }
-        ws.pause();
         const resCreate = await chats.createChat(data.name, ws.name);
-        ws.resume();
+
         ws.send(JSON.stringify(resCreate));
+        sendToAllChats();
         break;
 
       case TYPES.ENTER:
@@ -76,6 +97,8 @@ wss.on("connection", function connection(ws) {
         const resEnter = await chats.enterChat(data.name, ws.name);
         ws.resume();
         ws.send(JSON.stringify(resEnter));
+        sendToAllChats();
+        sendToAll(JSON.stringify(resEnter), resEnter.users);
         break;
 
       case TYPES.TEXT:
@@ -85,7 +108,7 @@ wss.on("connection", function connection(ws) {
           );
         }
         const resText = await chats.textChat(data.name, ws.name, data.msg);
-        ws.send(JSON.stringify(resText));
+        sendToAll(JSON.stringify(resText), resText.users);
         break;
 
       default:

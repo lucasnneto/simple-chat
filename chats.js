@@ -10,30 +10,34 @@ class Chats {
       users: [user],
     };
     await BD.setData(chats);
-    return { msg: "Chat criado!" };
+    return { ...chats[name], name, type: "CHAT" };
   }
   async getChat(name) {
     const chats = await BD.getData();
     if (!chats[name]) return { msg: "Chat não encontrado" };
     return { name, ...chats[name] };
   }
-  async getAllChat() {
+  async getAllChat(nameUser = "") {
     const chats = await BD.getData();
-    console.log(chats);
     const mappedChats = Object.keys(chats).map((name) => ({
       name,
       users: chats[name].users.length,
+      status: chats[name].users.includes(nameUser) ? "INSIDE" : "OUTSIDE",
     }));
-    return mappedChats;
+    return { type: "LIST_ALL", chats: mappedChats };
   }
   async enterChat(name, user) {
     const chats = await BD.getData();
     if (!chats[name]) return { msg: "Chat não encontrado" };
     if (chats[name].users.includes(user))
-      return { msg: "Voce já esta no chat" };
+      return {
+        type: "CHAT",
+        name,
+        ...chats[name],
+      };
     chats[name].users.push(user);
     await BD.setData(chats);
-    return { name, ...chats[name] };
+    return { type: "CHAT", name, ...chats[name] };
   }
   async textChat(name, user, msg) {
     const chats = await BD.getData();
@@ -47,7 +51,7 @@ class Chats {
       date: date.toISOString(),
     });
     await BD.setData(chats);
-    return { name, ...chats[name] };
+    return { type: "CHAT", name, ...chats[name] };
   }
 }
 exports.chats = new Chats();
