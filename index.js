@@ -1,5 +1,11 @@
 const { WebSocketServer } = require("ws");
+const express = require("express");
+const http = require("http");
 const { chats } = require("./chats");
+
+const app = express();
+const server = http.createServer(app);
+
 const TYPES = Object.freeze({
   CREATE_USER: "CREATE_USER",
   CREATE: "CREATE",
@@ -8,7 +14,9 @@ const TYPES = Object.freeze({
   TEXT: "TEXT",
 });
 
-const wss = new WebSocketServer({ port: 3000 });
+app.get("/", (req, res) => res.send(new Date()));
+
+const wss = new WebSocketServer({ server });
 wss.on("connection", function connection(ws) {
   ws.send(JSON.stringify({ msg: "Conectado!" }));
   ws.on("close", () => {
@@ -79,4 +87,8 @@ wss.on("connection", function connection(ws) {
         break;
     }
   });
+});
+
+server.listen(process.env.PORT || 3000, () => {
+  console.log(`Server started on port ${server.address().port} :)`);
 });
