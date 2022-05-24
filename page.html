@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const con = new WebSocket("ws://localhost:3000");
+      con.onopen = function () {
+        con.send(
+          JSON.stringify({
+            type: "CREATE_USER",
+            name: "lucasnneto",
+          })
+        );
+        con.send(
+          JSON.stringify({
+            type: "CREATE_USER",
+            name: "lucasnneto",
+          })
+        );
+        con.send(
+          JSON.stringify({
+            type: "CREATE_USER",
+            name: "lucasnneto1",
+          })
+        );
+      };
+
+      con.onerror = function (error) {
+        console.log("WebSocket Error ");
+        console.log(error);
+      };
+
+      con.onmessage = function (e) {
+        console.log(e.data);
+      };
+    </script>
+  </body>
+</html>
