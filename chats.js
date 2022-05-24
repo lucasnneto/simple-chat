@@ -17,6 +17,15 @@ class Chats {
     if (!chats[name]) return { msg: "Chat não encontrado" };
     return { name, ...chats[name] };
   }
+  async getAllChat() {
+    const chats = await BD.getData();
+    console.log(chats);
+    const mappedChats = Object.keys(chats).map((name) => ({
+      name,
+      users: chats[name].users.length,
+    }));
+    return mappedChats;
+  }
   async enterChat(name, user) {
     const chats = await BD.getData();
     if (!chats[name]) return { msg: "Chat não encontrado" };

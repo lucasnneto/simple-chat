@@ -10,6 +10,7 @@ const TYPES = Object.freeze({
   CREATE_USER: "CREATE_USER",
   CREATE: "CREATE",
   LIST: "LIST",
+  LIST_ALL: "LIST_ALL",
   ENTER: "ENTER",
   TEXT: "TEXT",
 });
@@ -46,6 +47,11 @@ wss.on("connection", function connection(ws) {
         const resList = await chats.getChat(data.name);
         ws.resume();
         ws.send(JSON.stringify(resList));
+        break;
+
+      case TYPES.LIST_ALL:
+        const resListAll = await chats.getAllChat();
+        ws.send(JSON.stringify(resListAll));
         break;
 
       case TYPES.CREATE:
